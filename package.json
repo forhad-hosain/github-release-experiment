@@ -21,9 +21,9 @@
     "build:types": "tsc --emitDeclarationOnly --declaration --outDir dist/types --rootDir src -p tsconfig.json",
     "build:rollup": "rollup -c ./rollup.config.js",
     "build": "npm run clean && npm run build:rollup && npm run build:types",
-    "release:patch": "npm version patch && git push origin main && git push origin --tags",
-    "release:minor": "npm version minor && git push origin main && git push origin --tags",
-    "release:major": "npm version major && git push origin main && git push origin --tags",
+    "release:patch": "npm version patch && git push origin main --follow-tags",
+    "release:minor": "npm version minor && git push origin main --follow-tags",
+    "release:major": "npm version major && git push origin main --follow-tags",
     "lint": "npm exec eslint \"src/**/*.ts\"",
     "lint:fix": "npm exec eslint \"src/**/*.ts\" --fix"
   },
