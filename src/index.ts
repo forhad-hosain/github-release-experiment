@@ -18,27 +18,27 @@ export function greet(name: string): string {
  * @param format - The format type: 'short', 'long', or 'iso' (default: 'long')
  * @returns A formatted date string
  */
-export function formatDate(
-  date: Date = new Date(),
-  format: "short" | "long" | "iso" = "long"
-): string {
-  switch (format) {
-    case "short":
-      return date.toLocaleDateString()
-    case "iso":
-      return date.toISOString()
-    case "long":
-    default:
-      return date.toLocaleString("en-US", {
-        weekday: "long",
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      })
-  }
-}
+// export function formatDate(
+//   date: Date = new Date(),
+//   format: "short" | "long" | "iso" = "long"
+// ): string {
+//   switch (format) {
+//     case "short":
+//       return date.toLocaleDateString()
+//     case "iso":
+//       return date.toISOString()
+//     case "long":
+//     default:
+//       return date.toLocaleString("en-US", {
+//         weekday: "long",
+//         year: "numeric",
+//         month: "long",
+//         day: "numeric",
+//         hour: "2-digit",
+//         minute: "2-digit",
+//       })
+//   }
+// }
 
 /**
  * Calculator class for basic math operations
