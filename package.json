@@ -1,6 +1,6 @@
 {
   "name": "github-release-consumer",
-  "version": "1.1.7",
+  "version": "1.1.8",
   "description": "A test project for GitHub Actions deployment workflow",
   "type": "module",
   "main": "dist/index.js",
