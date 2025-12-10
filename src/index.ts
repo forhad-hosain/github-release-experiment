@@ -1,5 +1,5 @@
 /**
- * Main entry point for github-release-consumer
+ * Main entry point for github-release-experiment
  * This module exports utilities and functions for testing deployment
  */
 
@@ -9,7 +9,7 @@
  * @returns A greeting message
  */
 export function greet(name: string): string {
-  return `Hello, ${name}! Welcome to github-release-consumer.`
+  return `Hello, ${name}! Welcome to github-release-experiment.`
 }
 
 /**
