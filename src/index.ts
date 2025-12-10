@@ -13,11 +13,31 @@ export function greet(name: string): string {
 }
 
 /**
- * Get version information
- * @returns The current version of the package
+ * Format a date object to a readable string
+ * @param date - The date to format (defaults to current date)
+ * @param format - The format type: 'short', 'long', or 'iso' (default: 'long')
+ * @returns A formatted date string
  */
-export function getVersion(): string {
-  return "1.0.0"
+export function formatDate(
+  date: Date = new Date(),
+  format: "short" | "long" | "iso" = "long"
+): string {
+  switch (format) {
+    case "short":
+      return date.toLocaleDateString()
+    case "iso":
+      return date.toISOString()
+    case "long":
+    default:
+      return date.toLocaleString("en-US", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+  }
 }
 
 /**
