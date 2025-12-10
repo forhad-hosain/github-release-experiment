@@ -1,5 +1,5 @@
 {
-  "name": "github-release-consumer",
+  "name": "github-release-experiment",
   "version": "1.2.0",
   "description": "A test project for GitHub Actions deployment workflow",
   "type": "module",
