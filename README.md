@@ -2,6 +2,12 @@
 
 A test project demonstrating GitHub Actions-based releases and deployment workflow for Node.js packages.
 
+[![Build and Release](https://github.com/forhad-hosain/github-release-experiment/actions/workflows/publish.yml/badge.svg)](https://github.com/forhad-hosain/github-release-experiment/actions/workflows/publish.yml)
+
+> 🚀 **GitHub-based releases**: Automated build and release workflow with pre-built artifacts.
+>
+> 💡 **Security features available**: CodeQL, SLSA provenance, SBOM, and more (see [Security](#-security) section below).
+
 ## 📦 Installation
 
 ### Option 1: Install from GitHub Release Branch (Latest)
@@ -105,6 +111,24 @@ console.log(calculator.add(1, 2)) // 3
 
 This project uses GitHub Actions for automated releases. The workflow is triggered when you push a version tag.
 
+### Quick Start
+
+**First time setup (one-time):**
+
+If you get a "remote rejected" error when releasing, you need to configure permissions:
+
+1. **Option A** (Recommended): Configure workflow permissions
+
+   - Go to: Settings → Actions → General → Workflow permissions
+   - Select: "Read and write permissions"
+   - ✅ Check: "Allow GitHub Actions to create and approve pull requests"
+   - Save
+
+2. **Option B** (If Option A doesn't work): Use a Personal Access Token
+   - Create a PAT with `repo` permissions
+   - Add it as a repository secret named `PAT_TOKEN`
+   - The workflow will automatically use it
+
 ### Creating a Release
 
 1. **Update version** (choose one):
@@ -124,8 +148,7 @@ This project uses GitHub Actions for automated releases. The workflow is trigger
 2. **GitHub Actions automatically**:
    - Builds the project
    - Validates build artifacts
-   - Updates the `release` branch with built artifacts
-   - Updates the tag with built artifacts
+   - Creates/updates the `release` branch with built artifacts
    - Creates a GitHub Release with installation instructions
 
 ### Manual Release Validation
@@ -136,6 +159,10 @@ You can also manually trigger the workflow to validate the build without creatin
 2. Select "Build and Release" workflow
 3. Click "Run workflow"
 4. Choose "Run validation without creating release" (dry_run: true)
+
+### Troubleshooting
+
+If you encounter errors, see [.github/docs/SETUP_INSTRUCTIONS.md](.github/docs/SETUP_INSTRUCTIONS.md) for detailed troubleshooting steps.
 
 ## 🔧 How It Works
 
@@ -149,19 +176,59 @@ You can also manually trigger the workflow to validate the build without creatin
 ```
 github-release-consumer/
 ├── .github/
-│   └── workflows/
-│       └── publish.yml      # GitHub Actions release workflow
+│   ├── workflows/
+│   │   ├── publish.yml          # GitHub Actions release workflow
+│   │   ├── codeql-analysis.yml  # Security code scanning
+│   │   └── scorecard.yml        # OpenSSF Scorecard
+│   ├── dependabot.yml           # Automated dependency updates
+│   ├── SECURITY_CONFIG.md       # Security configuration guide
+│   ├── SECURITY_QUICK_REFERENCE.md  # Quick security reference
+│   └── SETUP_INSTRUCTIONS.md    # Complete setup guide
 ├── src/
-│   └── index.ts             # Main source file
-├── dist/                    # Build output (gitignored, added to releases)
-│   ├── index.js             # Bundled JavaScript
+│   └── index.ts                 # Main source file
+├── dist/                        # Build output (gitignored, added to releases)
+│   ├── index.js                 # Bundled JavaScript
 │   └── types/
-│       └── index.d.ts       # TypeScript declarations
-├── package.json             # Package configuration
-├── tsconfig.json            # TypeScript configuration
-├── rollup.config.js         # Rollup bundler configuration
-└── README.md                # This file
+│       └── index.d.ts           # TypeScript declarations
+├── package.json                 # Package configuration
+├── tsconfig.json                # TypeScript configuration
+├── rollup.config.js             # Rollup bundler configuration
+├── SECURITY.md                  # Security policy
+└── README.md                    # This file
 ```
+
+## 🔒 Security
+
+This project is configured with industry-standard security features (currently in setup phase):
+
+### 🚀 Currently Active
+
+- ✅ **Automated Releases** - Pre-built artifacts included in releases
+- ✅ **Build Validation** - Tests and build checks before release
+- ✅ **Branch Protection Ready** - Workflows configured for protected branches
+
+### 🔧 Available Security Features (Ready to Enable)
+
+The repository includes pre-configured workflows for:
+
+- 🔐 **SLSA Level 3 Compliance** - Build provenance attestation
+- 📦 **SBOM Generation** - Software Bill of Materials (CycloneDX)
+- 🛡️ **CodeQL Analysis** - Automated security code scanning
+- 🔍 **Trivy Scanning** - Dependency vulnerability detection
+- 🤖 **Dependabot** - Automated dependency updates
+- ✅ **Artifact Checksums** - SHA256 integrity verification
+- 🔐 **Environment Protection** - Manual approval gates for releases
+
+**To enable these features:**
+
+See [.github/docs/SETUP_INSTRUCTIONS.md](.github/docs/SETUP_INSTRUCTIONS.md) - Complete setup guide
+
+### 📚 Documentation
+
+- 📋 **Security Policy**: [SECURITY.md](SECURITY.md) - Vulnerability reporting
+- 🔧 **Full Setup Guide**: [.github/docs/SETUP_INSTRUCTIONS.md](.github/docs/SETUP_INSTRUCTIONS.md) - Complete security configuration
+- 📖 **Quick Reference**: [.github/docs/SECURITY_QUICK_REFERENCE.md](.github/docs/SECURITY_QUICK_REFERENCE.md) - Daily security tasks
+- ⚙️ **Configuration Details**: [.github/docs/SECURITY_CONFIG.md](.github/docs/SECURITY_CONFIG.md) - Technical reference
 
 ## 📝 License
 
