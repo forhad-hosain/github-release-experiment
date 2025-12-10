@@ -215,7 +215,7 @@ jobs:
             ```json
             {
               "dependencies": {
-                "github-release-experiment": "github:${{ github.repository }}#release"
+                "github-release-consumer": "github:${{ github.repository }}#release"
               }
             }
             ```
@@ -226,7 +226,7 @@ jobs:
             ```json
             {
               "dependencies": {
-                "github-release-experiment": "github:${{ github.repository }}#v${{ needs.validate.outputs.version }}"
+                "github-release-consumer": "github:${{ github.repository }}#v${{ needs.validate.outputs.version }}"
               }
             }
             ```

@@ -1,5 +1,5 @@
 /**
- * Main entry point for github-release-experiment
+ * Main entry point for github-release-consumer
  * This module exports utilities and functions for testing deployment
  */
 
@@ -9,7 +9,35 @@
  * @returns A greeting message
  */
 export function greet(name: string): string {
-  return `Hello, ${name}! Welcome to github-release-experiment.`
+  return `Hello, ${name}! Welcome to github-release-consumer.`
+}
+
+/**
+ * Format a date object to a readable string
+ * @param date - The date to format (defaults to current date)
+ * @param format - The format type: 'short', 'long', or 'iso' (default: 'long')
+ * @returns A formatted date string
+ */
+export function formatDate(
+  date: Date = new Date(),
+  format: "short" | "long" | "iso" = "long"
+): string {
+  switch (format) {
+    case "short":
+      return date.toLocaleDateString()
+    case "iso":
+      return date.toISOString()
+    case "long":
+    default:
+      return date.toLocaleString("en-US", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+  }
 }
 
 /**
