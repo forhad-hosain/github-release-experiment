@@ -1,4 +1,4 @@
-# github-actions-exp
+# github-release-consumer
 
 A test project demonstrating GitHub Actions-based releases and deployment workflow for Node.js packages.
 
@@ -11,7 +11,7 @@ Add to your `package.json`:
 ```json
 {
   "dependencies": {
-    "github-actions-exp": "github:YOUR_USERNAME/github-actions-exp#release"
+    "github-release-consumer": "github:YOUR_USERNAME/github-release-consumer#release"
   }
 }
 ```
@@ -23,7 +23,7 @@ Add to your `package.json`:
 ```json
 {
   "dependencies": {
-    "github-actions-exp": "github:YOUR_USERNAME/github-actions-exp#v1.0.0"
+    "github-release-consumer": "github:YOUR_USERNAME/github-release-consumer#v1.0.0"
   }
 }
 ```
@@ -41,12 +41,12 @@ yarn install
 ## 🚀 Usage
 
 ```javascript
-import { greet, getVersion, Calculator } from "github-actions-exp"
+import { greet, getVersion, Calculator } from "github-release-consumer"
 // or
-import calculator from "github-actions-exp"
+import calculator from "github-release-consumer"
 
 // Use the greet function
-console.log(greet("World")) // "Hello, World! Welcome to github-actions-exp."
+console.log(greet("World")) // "Hello, World! Welcome to github-release-consumer."
 
 // Get version
 console.log(getVersion()) // "1.0.0"
@@ -74,8 +74,8 @@ console.log(calculator.add(1, 2)) // 3
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/YOUR_USERNAME/github-actions-exp.git
-   cd github-actions-exp
+   git clone https://github.com/YOUR_USERNAME/github-release-consumer.git
+   cd github-release-consumer
    ```
 
 2. Install dependencies:
@@ -147,7 +147,7 @@ You can also manually trigger the workflow to validate the build without creatin
 ## 📁 Project Structure
 
 ```
-github-actions-exp/
+github-release-consumer/
 ├── .github/
 │   └── workflows/
 │       └── publish.yml      # GitHub Actions release workflow

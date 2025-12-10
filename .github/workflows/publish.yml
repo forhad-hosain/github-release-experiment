@@ -1,286 +1,286 @@
 name: Build and Release
 
 on:
-    push:
-        tags:
-            - 'v*' # Triggers on tags like v1.0.0, v1.2.3, etc.
-    workflow_dispatch: # Allows manual triggering for testing workflow only
-        inputs:
-            dry_run:
-                description: 'Run validation without creating release'
-                required: false
-                default: 'true'
-                type: boolean
+  push:
+    tags:
+      - "v*" # Triggers on tags like v1.0.0, v1.2.3, etc.
+  workflow_dispatch: # Allows manual triggering for testing workflow only
+    inputs:
+      dry_run:
+        description: "Run validation without creating release"
+        required: false
+        default: "true"
+        type: boolean
 
 jobs:
-    # Validation job - runs on both tag push and manual trigger
-    validate:
-        runs-on: ubuntu-latest
-        outputs:
-            version: ${{ steps.get_version.outputs.version }}
-            is_tag: ${{ steps.check_trigger.outputs.is_tag }}
+  # Validation job - runs on both tag push and manual trigger
+  validate:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.get_version.outputs.version }}
+      is_tag: ${{ steps.check_trigger.outputs.is_tag }}
 
-        steps:
-            - name: Checkout code
-              uses: actions/checkout@v4
-              with:
-                  fetch-depth: 0 # Fetch all history for proper git operations
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Fetch all history for proper git operations
 
-            - name: Check trigger type
-              id: check_trigger
-              run: |
-                  if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
-                    echo "is_tag=true" >> $GITHUB_OUTPUT
-                    echo "Triggered by tag push"
-                  else
-                    echo "is_tag=false" >> $GITHUB_OUTPUT
-                    echo "Triggered manually - validation only"
-                  fi
+      - name: Check trigger type
+        id: check_trigger
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            echo "is_tag=true" >> $GITHUB_OUTPUT
+            echo "Triggered by tag push"
+          else
+            echo "is_tag=false" >> $GITHUB_OUTPUT
+            echo "Triggered manually - validation only"
+          fi
 
-            - name: Setup Node.js
-              uses: actions/setup-node@v4
-              with:
-                  node-version: '20'
-                  cache: 'npm'
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
 
-            - name: Install dependencies
-              run: npm ci
+      - name: Install dependencies
+        run: npm ci
 
-            # Linter temporarily disabled - code changes required to make linter pass
-            # TODO: Re-enable after fixing linting errors
-            # - name: Run linter
-            #   run: npm run lint
+      # Linter temporarily disabled - code changes required to make linter pass
+      # TODO: Re-enable after fixing linting errors
+      # - name: Run linter
+      #   run: npm run lint
 
-            - name: Build project
-              run: npm run build
+      - name: Build project
+        run: npm run build
 
-            - name: Verify build artifacts exist
-              run: |
-                  echo "Checking for required build artifacts..."
-                  if [ ! -d "dist" ]; then
-                    echo "❌ Error: dist directory not found"
-                    exit 1
-                  fi
-                  if [ ! -f "dist/index.js" ]; then
-                    echo "❌ Error: dist/index.js not found"
-                    exit 1
-                  fi
-                  if [ ! -d "dist/types" ]; then
-                    echo "❌ Error: dist/types directory not found"
-                    exit 1
-                  fi
-                  if [ ! -f "dist/types/index.d.ts" ]; then
-                    echo "❌ Error: dist/types/index.d.ts not found"
-                    exit 1
-                  fi
-                  echo "✅ All build artifacts verified successfully"
+      - name: Verify build artifacts exist
+        run: |
+          echo "Checking for required build artifacts..."
+          if [ ! -d "dist" ]; then
+            echo "❌ Error: dist directory not found"
+            exit 1
+          fi
+          if [ ! -f "dist/index.js" ]; then
+            echo "❌ Error: dist/index.js not found"
+            exit 1
+          fi
+          if [ ! -d "dist/types" ]; then
+            echo "❌ Error: dist/types directory not found"
+            exit 1
+          fi
+          if [ ! -f "dist/types/index.d.ts" ]; then
+            echo "❌ Error: dist/types/index.d.ts not found"
+            exit 1
+          fi
+          echo "✅ All build artifacts verified successfully"
 
-            - name: Extract version from tag
-              id: get_version
-              run: |
-                  if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
-                    VERSION=${GITHUB_REF#refs/tags/v}
-                    echo "version=$VERSION" >> $GITHUB_OUTPUT
-                    echo "Extracted version from tag: $VERSION"
-                  else
-                    VERSION=$(node -p "require('./package.json').version")
-                    echo "version=$VERSION" >> $GITHUB_OUTPUT
-                    echo "Extracted version from package.json: $VERSION"
-                  fi
+      - name: Extract version from tag
+        id: get_version
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/v}
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
+            echo "Extracted version from tag: $VERSION"
+          else
+            VERSION=$(node -p "require('./package.json').version")
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
+            echo "Extracted version from package.json: $VERSION"
+          fi
 
-            - name: Verify package.json version matches tag
-              if: startsWith(github.ref, 'refs/tags/')
-              run: |
-                  PACKAGE_VERSION=$(node -p "require('./package.json').version")
-                  TAG_VERSION="${{ steps.get_version.outputs.version }}"
-                  echo "Package version: $PACKAGE_VERSION"
-                  echo "Tag version: $TAG_VERSION"
-                  if [ "$PACKAGE_VERSION" != "$TAG_VERSION" ]; then
-                    echo "❌ Error: package.json version ($PACKAGE_VERSION) doesn't match tag version ($TAG_VERSION)"
-                    echo "Please update package.json version to match the tag or create a new tag matching package.json"
-                    exit 1
-                  fi
-                  echo "✅ Version verification passed"
+      - name: Verify package.json version matches tag
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          PACKAGE_VERSION=$(node -p "require('./package.json').version")
+          TAG_VERSION="${{ steps.get_version.outputs.version }}"
+          echo "Package version: $PACKAGE_VERSION"
+          echo "Tag version: $TAG_VERSION"
+          if [ "$PACKAGE_VERSION" != "$TAG_VERSION" ]; then
+            echo "❌ Error: package.json version ($PACKAGE_VERSION) doesn't match tag version ($TAG_VERSION)"
+            echo "Please update package.json version to match the tag or create a new tag matching package.json"
+            exit 1
+          fi
+          echo "✅ Version verification passed"
 
-            - name: Verify package.json configuration
-              run: |
-                  echo "Verifying package.json configuration..."
-                  # Check main entry point
-                  MAIN=$(node -p "require('./package.json').main")
-                  if [ "$MAIN" != "dist/index.js" ]; then
-                    echo "⚠️  Warning: main entry point is '$MAIN', expected 'dist/index.js'"
-                  fi
-                  # Check types entry point
-                  TYPES=$(node -p "require('./package.json').types")
-                  if [ "$TYPES" != "dist/types/index.d.ts" ]; then
-                    echo "⚠️  Warning: types entry point is '$TYPES', expected 'dist/types/index.d.ts'"
-                  fi
-                  # Check files array
-                  FILES=$(node -p "JSON.stringify(require('./package.json').files || [])")
-                  echo "Package includes files: $FILES"
-                  echo "✅ Package configuration verified"
+      - name: Verify package.json configuration
+        run: |
+          echo "Verifying package.json configuration..."
+          # Check main entry point
+          MAIN=$(node -p "require('./package.json').main")
+          if [ "$MAIN" != "dist/index.js" ]; then
+            echo "⚠️  Warning: main entry point is '$MAIN', expected 'dist/index.js'"
+          fi
+          # Check types entry point
+          TYPES=$(node -p "require('./package.json').types")
+          if [ "$TYPES" != "dist/types/index.d.ts" ]; then
+            echo "⚠️  Warning: types entry point is '$TYPES', expected 'dist/types/index.d.ts'"
+          fi
+          # Check files array
+          FILES=$(node -p "JSON.stringify(require('./package.json').files || [])")
+          echo "Package includes files: $FILES"
+          echo "✅ Package configuration verified"
 
-    # Release job - only runs on tag push (not on manual trigger)
-    release:
-        needs: validate
-        if: needs.validate.outputs.is_tag == 'true' && startsWith(github.ref, 'refs/tags/')
-        runs-on: ubuntu-latest
-        permissions:
-            contents: write # Required to create releases and push to branches
+  # Release job - only runs on tag push (not on manual trigger)
+  release:
+    needs: validate
+    if: needs.validate.outputs.is_tag == 'true' && startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Required to create releases and push to branches
 
-        steps:
-            - name: Harden Runner
-              uses: step-security/harden-runner@v2
-              with:
-                  egress-policy: audit
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
 
-            - name: Checkout code
-              uses: actions/checkout@v4
-              with:
-                  fetch-depth: 0
-                  token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-            - name: Setup Node.js
-              uses: actions/setup-node@v4
-              with:
-                  node-version: '20'
-                  cache: 'npm'
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
 
-            - name: Install dependencies
-              run: npm ci
+      - name: Install dependencies
+        run: npm ci
 
-            - name: Build project
-              run: npm run build
+      - name: Build project
+        run: npm run build
 
-            - name: Verify build artifacts
-              run: |
-                  echo "Verifying build artifacts..."
-                  if [ ! -d "dist" ] || [ ! -f "dist/index.js" ] || [ ! -f "dist/types/index.d.ts" ]; then
-                    echo "❌ Build artifacts missing"
-                    exit 1
-                  fi
-                  echo "✅ Build artifacts verified"
+      - name: Verify build artifacts
+        run: |
+          echo "Verifying build artifacts..."
+          if [ ! -d "dist" ] || [ ! -f "dist/index.js" ] || [ ! -f "dist/types/index.d.ts" ]; then
+            echo "❌ Build artifacts missing"
+            exit 1
+          fi
+          echo "✅ Build artifacts verified"
 
-            - name: Configure Git
-              run: |
-                  git config user.name "github-actions[bot]"
-                  git config user.email "github-actions[bot]@users.noreply.github.com"
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
 
-            - name: Update release branch with built artifacts
-              run: |
-                  TAG_NAME=${GITHUB_REF#refs/tags/}
-                  echo "Updating release branch to tag: $TAG_NAME with built artifacts"
+      - name: Update release branch with built artifacts
+        run: |
+          TAG_NAME=${GITHUB_REF#refs/tags/}
+          echo "Updating release branch to tag: $TAG_NAME with built artifacts"
 
-                  # Fetch all branches (tags are already available from checkout)
-                  git fetch origin
+          # Fetch all branches (tags are already available from checkout)
+          git fetch origin
 
-                  # Check if release branch exists on remote
-                  if git ls-remote --heads origin release | grep -q release; then
-                    echo "Release branch exists, checking it out..."
-                    git checkout release
-                    git pull origin release || true
-                  else
-                    echo "Creating new release branch..."
-                    git checkout -b release
-                  fi
+          # Check if release branch exists on remote
+          if git ls-remote --heads origin release | grep -q release; then
+            echo "Release branch exists, checking it out..."
+            git checkout release
+            git pull origin release || true
+          else
+            echo "Creating new release branch..."
+            git checkout -b release
+          fi
 
-                  # Reset to the tagged commit
-                  echo "Resetting release branch to $TAG_NAME..."
-                  git reset --hard $TAG_NAME
+          # Reset to the tagged commit
+          echo "Resetting release branch to $TAG_NAME..."
+          git reset --hard $TAG_NAME
 
-                  # Rebuild the project (dist was removed by git reset)
-                  echo "Building project for release..."
-                  npm ci
-                  npm run build
+          # Rebuild the project (dist was removed by git reset)
+          echo "Building project for release..."
+          npm ci
+          npm run build
 
-                  # Add built artifacts (force add despite .gitignore)
-                  echo "Adding built artifacts..."
-                  git add -f dist/
+          # Add built artifacts (force add despite .gitignore)
+          echo "Adding built artifacts..."
+          git add -f dist/
 
-                  # Commit if there are changes
-                  if ! git diff --staged --quiet; then
-                    git commit -m "chore: add built artifacts for release $TAG_NAME" \
-                      -m "Auto-generated by GitHub Actions workflow." \
-                      -m "Built from commit: ${{ github.sha }}"
-                    echo "✅ Built artifacts committed"
-                  else
-                    echo "No changes to commit"
-                  fi
+          # Commit if there are changes
+          if ! git diff --staged --quiet; then
+            git commit -m "chore: add built artifacts for release $TAG_NAME" \
+              -m "Auto-generated by GitHub Actions workflow." \
+              -m "Built from commit: ${{ github.sha }}"
+            echo "✅ Built artifacts committed"
+          else
+            echo "No changes to commit"
+          fi
 
-                  # Force push the release branch
-                  echo "Pushing release branch..."
-                  git push origin release --force
+          # Force push the release branch
+          echo "Pushing release branch..."
+          git push origin release --force
 
-                  echo "✅ Release branch updated successfully"
+          echo "✅ Release branch updated successfully"
 
-            - name: Create GitHub Release
-              uses: softprops/action-gh-release@v2
-              with:
-                  name: Release v${{ needs.validate.outputs.version }}
-                  tag_name: ${{ github.ref_name }}
-                  body: |
-                      ## 🚀 Release v${{ needs.validate.outputs.version }}
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Release v${{ needs.validate.outputs.version }}
+          tag_name: ${{ github.ref_name }}
+          body: |
+            ## 🚀 Release v${{ needs.validate.outputs.version }}
 
-                      ### 📦 Installation
+            ### 📦 Installation
 
-                      #### Option 1: Use release branch (auto-updates to latest release)
+            #### Option 1: Use release branch (auto-updates to latest release)
 
-                      Add to your `package.json`:
-                      ```json
-                      {
-                        "dependencies": {
-                          "github-actions-exp": "github:${{ github.repository }}#release"
-                        }
-                      }
-                      ```
+            Add to your `package.json`:
+            ```json
+            {
+              "dependencies": {
+                "github-release-consumer": "github:${{ github.repository }}#release"
+              }
+            }
+            ```
 
-                      #### Option 2: Pin to specific version (recommended for production)
+            #### Option 2: Pin to specific version (recommended for production)
 
-                      Add to your `package.json`:
-                      ```json
-                      {
-                        "dependencies": {
-                          "github-actions-exp": "github:${{ github.repository }}#v${{ needs.validate.outputs.version }}"
-                        }
-                      }
-                      ```
+            Add to your `package.json`:
+            ```json
+            {
+              "dependencies": {
+                "github-release-consumer": "github:${{ github.repository }}#v${{ needs.validate.outputs.version }}"
+              }
+            }
+            ```
 
-                      Then run:
-                      ```bash
-                      npm install
-                      # or
-                      pnpm install
-                      # or
-                      yarn install
-                      ```
+            Then run:
+            ```bash
+            npm install
+            # or
+            pnpm install
+            # or
+            yarn install
+            ```
 
-                      ### 🔧 How it works
+            ### 🔧 How it works
 
-                      - Pre-built artifacts are included in the tag and release branch
-                      - **No build required** during installation - fast and efficient!
-                      - Works perfectly in CI/CD environments (no `npm ci` slowdown)
-                      - TypeScript types and source maps are pre-generated
+            - Pre-built artifacts are included in the tag and release branch
+            - **No build required** during installation - fast and efficient!
+            - Works perfectly in CI/CD environments (no `npm ci` slowdown)
+            - TypeScript types and source maps are pre-generated
 
-                      ### 📋 What's included
+            ### 📋 What's included
 
-                      - ✅ Build validated and verified
-                      - ✅ Linting passed
-                      - ✅ Pre-built JavaScript bundles
-                      - ✅ TypeScript type definitions
-                      - ✅ Source maps for debugging
-                      - ✅ Zero build overhead for consumers
+            - ✅ Build validated and verified
+            - ✅ Linting passed
+            - ✅ Pre-built JavaScript bundles
+            - ✅ TypeScript type definitions
+            - ✅ Source maps for debugging
+            - ✅ Zero build overhead for consumers
 
-                      ### ⚡ Performance
+            ### ⚡ Performance
 
-                      Installing from GitHub with pre-built artifacts is:
-                      - 🚀 **Faster** - No compilation needed
-                      - 💾 **Lighter** - No devDependencies required
-                      - 🔒 **Safer** - No build scripts executed during install
+            Installing from GitHub with pre-built artifacts is:
+            - 🚀 **Faster** - No compilation needed
+            - 💾 **Lighter** - No devDependencies required
+            - 🔒 **Safer** - No build scripts executed during install
 
-                      ---
-                      *Generated automatically by GitHub Actions*
-                  draft: false
-                  prerelease: false
-                  generate_release_notes: true
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            ---
+            *Generated automatically by GitHub Actions*
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
