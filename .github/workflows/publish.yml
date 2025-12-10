@@ -188,6 +188,11 @@ jobs:
                   echo "Resetting release branch to $TAG_NAME..."
                   git reset --hard $TAG_NAME
 
+                  # Rebuild the project (dist was removed by git reset)
+                  echo "Building project for release..."
+                  npm ci
+                  npm run build
+
                   # Add built artifacts (force add despite .gitignore)
                   echo "Adding built artifacts..."
                   git add -f dist/
