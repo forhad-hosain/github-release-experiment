@@ -13,39 +13,11 @@ on:
         type: boolean
 
 jobs:
-  # Security scanning job - runs in parallel with validation
-  # TODO: Uncomment after configuring GitHub Security features
-  # security-scan:
-  #   runs-on: ubuntu-latest
-  #   permissions:
-  #     contents: read
-  #     security-events: write
-  #
-  #   steps:
-  #     - name: Checkout code
-  #       uses: actions/checkout@v4
-  #
-  #     - name: Run Trivy vulnerability scanner
-  #       uses: aquasecurity/trivy-action@master
-  #       with:
-  #         scan-type: "fs"
-  #         scan-ref: "."
-  #         format: "sarif"
-  #         output: "trivy-results.sarif"
-  #         severity: "CRITICAL,HIGH"
-  #
-  #     - name: Upload Trivy results to GitHub Security
-  #       uses: github/codeql-action/upload-sarif@v3
-  #       if: always()
-  #       with:
-  #         sarif_file: "trivy-results.sarif"
-
   # Validation job - runs on both tag push and manual trigger
   validate:
     runs-on: ubuntu-latest
     permissions:
-      contents: read # Read-only access to repository contents
-      # security-events: write # TODO: Uncomment after enabling CodeQL
+      contents: read
     outputs:
       version: ${{ steps.get_version.outputs.version }}
       is_tag: ${{ steps.check_trigger.outputs.is_tag }}
@@ -54,7 +26,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Fetch all history for proper git operations
+          fetch-depth: 0
 
       - name: Check trigger type
         id: check_trigger
@@ -75,23 +47,6 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
-
-      # TODO: Uncomment security checks after initial release testing
-      # - name: Security audit
-      #   run: |
-      #     echo "Running npm audit..."
-      #     npm audit --audit-level=moderate || true
-      #     echo "✅ Security audit completed"
-
-      # - name: Check for outdated dependencies
-      #   run: |
-      #     echo "Checking for outdated dependencies..."
-      #     npm outdated || true
-
-      # Linter temporarily disabled - code changes required to make linter pass
-      # TODO: Re-enable after fixing linting errors
-      # - name: Run linter
-      #   run: npm run lint
 
       - name: Build project
         run: npm run build
@@ -147,17 +102,14 @@ jobs:
       - name: Verify package.json configuration
         run: |
           echo "Verifying package.json configuration..."
-          # Check main entry point
           MAIN=$(node -p "require('./package.json').main")
           if [ "$MAIN" != "dist/index.js" ]; then
             echo "⚠️  Warning: main entry point is '$MAIN', expected 'dist/index.js'"
           fi
-          # Check types entry point
           TYPES=$(node -p "require('./package.json').types")
           if [ "$TYPES" != "dist/types/index.d.ts" ]; then
             echo "⚠️  Warning: types entry point is '$TYPES', expected 'dist/types/index.d.ts'"
           fi
-          # Check files array
           FILES=$(node -p "JSON.stringify(require('./package.json').files || [])")
           echo "Package includes files: $FILES"
           echo "✅ Package configuration verified"
@@ -165,24 +117,12 @@ jobs:
   # Release job - only runs on tag push (not on manual trigger)
   release:
     needs: validate
-    # needs: [validate, security-scan] # TODO: Add security-scan after GitHub UI configuration
     if: needs.validate.outputs.is_tag == 'true' && startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     permissions:
-      contents: write # Required to create releases and push to branches
-      # id-token: write # TODO: Uncomment for SLSA provenance generation
-      # attestations: write # TODO: Uncomment for artifact attestation
-    # TODO: Uncomment environment protection after creating production environment in GitHub
-    # environment:
-    #   name: production
-    #   url: https://github.com/${{ github.repository }}/releases/tag/${{ github.ref_name }}
+      contents: write
 
     steps:
-      - name: Harden Runner
-        uses: step-security/harden-runner@v2
-        with:
-          egress-policy: audit
-
       - name: Checkout code
         uses: actions/checkout@v4
         with:
@@ -210,21 +150,6 @@ jobs:
           fi
           echo "✅ Build artifacts verified"
 
-      # TODO: Uncomment after initial release testing
-      # - name: Generate SBOM (Software Bill of Materials)
-      #   run: |
-      #     echo "Generating SBOM..."
-      #     npx @cyclonedx/cyclonedx-npm --output-file sbom.json
-      #     echo "✅ SBOM generated"
-
-      # TODO: Uncomment after enabling id-token and attestations permissions
-      # - name: Attest build artifacts
-      #   uses: actions/attest-build-provenance@v1
-      #   with:
-      #     subject-path: |
-      #       dist/**/*
-      #       sbom.json
-
       - name: Configure Git
         run: |
           git config user.name "github-actions[bot]"
@@ -235,7 +160,7 @@ jobs:
           TAG_NAME=${GITHUB_REF#refs/tags/}
           echo "Updating release branch to tag: $TAG_NAME with built artifacts"
 
-          # Fetch all branches (tags are already available from checkout)
+          # Fetch all branches
           git fetch origin
 
           # Delete local release branch if it exists
@@ -274,36 +199,13 @@ jobs:
 
           echo "✅ Release branch updated successfully"
 
-      # TODO: Uncomment after initial release testing
-      # - name: Create release checksums
-      #   run: |
-      #     echo "Generating checksums for artifacts..."
-      #     cd dist
-      #     sha256sum index.js > ../checksums.txt
-      #     sha256sum types/index.d.ts >> ../checksums.txt
-      #     cd ..
-      #     echo "✅ Checksums generated"
-
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           name: Release v${{ needs.validate.outputs.version }}
           tag_name: ${{ github.ref_name }}
-          # TODO: Uncomment to attach security artifacts
-          # files: |
-          #   sbom.json
-          #   checksums.txt
           body: |
             ## 🚀 Release v${{ needs.validate.outputs.version }}
-
-            <!-- TODO: Uncomment after enabling security features
-            ### 🔒 Security & Verification
-
-            - ✅ Build provenance attestation included
-            - ✅ SBOM (Software Bill of Materials) attached
-            - ✅ Checksums provided for integrity verification
-            - ✅ Dependencies audited for vulnerabilities
-            -->
 
             ### 📦 Installation
 
@@ -348,7 +250,6 @@ jobs:
             ### 📋 What's included
 
             - ✅ Build validated and verified
-            - ✅ Linting passed
             - ✅ Pre-built JavaScript bundles
             - ✅ TypeScript type definitions
             - ✅ Source maps for debugging
