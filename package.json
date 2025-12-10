@@ -1,0 +1,43 @@
+{
+  "name": "github-actions-exp",
+  "version": "1.0.0",
+  "description": "A test project for GitHub Actions deployment workflow",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/types/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/types/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "clean": "rimraf dist",
+    "build:types": "tsc --emitDeclarationOnly --declaration --outDir dist/types --rootDir src -p tsconfig.json",
+    "build:rollup": "rollup -c ./rollup.config.js",
+    "build": "npm run clean && npm run build:rollup && npm run build:types",
+    "release:patch": "npm version patch && git push && git push --tags",
+    "release:minor": "npm version minor && git push && git push --tags",
+    "release:major": "npm version major && git push && git push --tags",
+    "lint": "npm exec eslint \"src/**/*.ts\"",
+    "lint:fix": "npm exec eslint \"src/**/*.ts\" --fix"
+  },
+  "devDependencies": {
+    "@rollup/plugin-json": "^6.1.0",
+    "@types/node": "^22.9.0",
+    "esbuild": "^0.25.12",
+    "eslint": "^9.39.1",
+    "rimraf": "^6.0.1",
+    "rollup": "^2.79.2",
+    "rollup-plugin-esbuild": "^6.2.1",
+    "rollup-plugin-sourcemaps": "^0.6.3",
+    "rollup-plugin-typescript-paths": "^1.5.0",
+    "typescript": "^5.6.0"
+  },
+  "dependencies": {}
+}
